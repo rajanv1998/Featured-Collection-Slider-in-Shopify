@@ -1,0 +1,131 @@
+<section class="fcs_sec collection_tabs">
+  <div class="page-width">	
+    <div class="section-heading text-center">
+      {% if section.settings.heading != blank %}
+      <h2>{{ section.settings.heading }}</h2>
+      {% endif %}
+      {% if section.settings.subheading != blank %}
+      <p>{{ section.settings.subheading }}</p>
+      {% endif %}
+    </div>
+    {%- assign collection = collections[section.settings.collection] -%}
+ 
+      <div class="featured_slider_new">
+      <div class="swiper-wrapper">
+        {% for product in collection.products limit: 15 %} 
+        <div class="swiper-slide">
+          <a class="product_img_link" href="{{ product.url }}">
+            <div class="reveal">
+              {% if product.compare_at_price > product.price and settings.promotion_tag %}
+              <div class="product_discount" aria-hidden="true" accesskey>
+                {% if settings.promo_text_or_pourc == '1' %}
+                  {{settings.promo_text}}
+                {% else %}
+                  {% if product.compare_at_price_max != product.compare_at_price_min %}
+                    {% assign compare_old_count = 0 %}
+                    {% assign compare_new_count = 0 %}
+                    {% for variant in product.variants %}
+                      {% if variant.compare_at_price > variant.price %}
+                          {% capture compare_new_count %}{{ variant.compare_at_price | minus: variant.price | times: 100.0 | divided_by: variant.compare_at_price| ceil }}{% endcapture %}
+                        <script>if({{compare_new_count}} > {{compare_old_count}}){ {% assign compare_old_count = compare_new_count %} }</script>
+                      {% endif %}
+                    {% endfor %}
+                    <span>{{ 'products.product.upto' | t }} -{{ compare_old_count | append: "%"}}</span>
+                  {% else %}
+                    <span>-{{ product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | ceil }}%</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endif %}
+              {% if product.images.size > 1 %}
+              <img class="product_img_new lazyload" src="{{ product.featured_image.src | img_url: 'original' }}">
+              <img class="product_img_new hidden lazyload" src="{{ product.images[1] | product_img_url: 'original' }}">
+              {% else %}
+              <img src="{{ product.featured_image.src | img_url: 'original' }}" alt="{{ product.featured_image.alt | escape }}">
+              {% endif %}
+            </div>
+          </a>
+          <a class="product_title" href="{{ product.url }}">{{ product.title }}</a>
+          {% if product.available %}
+          <div class="product-card__price">
+            {% if product.compare_at_price > product.price %}
+              {% if product.price_varies %}
+                {% assign sale_price = product.price | money %}
+                <span class="product-card__promo-price">{{ 'products.product.on_sale_from_html' | t: price: sale_price }}</span>
+              {% else %}
+                <span class="product-card__promo-price">{{ product.price | money }}</span>
+                <s class="product-card__regular-price">{{ product.compare_at_price | money }}</s>
+              {% endif %}
+            {% else %}
+              {% if product.price_varies %}
+                {% assign price = product.price | money %}
+                {{ 'products.product.from_text_html' | t: price: price }}
+              {% else %}
+                {{ product.price | money }}
+              {% endif %}
+            {% endif %}
+            {%- unless product.price_varies -%}
+              {%- if current_variant.unit_price_measurement -%}
+                {% include 'product-unit-price', product_variant: current_variant, wrapper_class: "product-card__unit-price" %}
+              {%- endif -%}
+            {%- endunless -%}
+          </div>
+        {% else %}
+          <div class="product-card__availability">
+            {{ 'products.product.sold_out' | t }}
+          </div>
+        {% endif %}
+          {% if settings.app_reviews != '0' %} <div class="product_rating text-left">{% include 'star-rating' %}</div> {% endif %}
+          </div>
+        {%endfor%}
+        
+      </div>
+      
+      <div class="swiper-button-prev"></div>
+  	  <div class="swiper-button-next"></div>
+      </div>
+    {% if section.settings.button_label != blank %}
+    <div class="btn_container text-center">
+          <a href="{{section.settings.collection_url}}">{{section.settings.button_label}}</a>
+        </div>
+    {% endif %}
+  </div>
+</section>
+{% schema %}
+  {
+    "name": "Collection Slider",
+    "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+		{
+          "type": "textarea",
+          "id": "subheading",
+          "label": "Sub Heading"
+        },
+		{
+          "id": "collection",
+          "type": "collection",
+          "label": "Select Collection"
+        },
+		{
+          "type": "text",
+          "id": "button_label",
+          "label": "Button Label"
+        },
+		{
+          "type": "url",
+          "id": "collection_url",
+          "label": "Button Url"
+        }
+	],
+      "presets": [
+       {
+         "name": "Collection Slider",
+         "category": "Collection Slider"
+       }
+      ]
+  }
+{% endschema %}
